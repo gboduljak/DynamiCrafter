@@ -1,14 +1,21 @@
-import argparse, os, sys, datetime
-from omegaconf import OmegaConf
-from transformers import logging as transf_logging
+import argparse
+import datetime
+import os
+import sys
+
 import pytorch_lightning as pl
+import torch
+from omegaconf import OmegaConf
 from pytorch_lightning import seed_everything
 from pytorch_lightning.trainer import Trainer
-import torch
+from transformers import logging as transf_logging
+
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
+from utils_train import (get_trainer_callbacks, get_trainer_logger,
+                         get_trainer_strategy, init_workspace,
+                         load_checkpoints, set_logger)
+
 from utils.utils import instantiate_from_config
-from utils_train import get_trainer_callbacks, get_trainer_logger, get_trainer_strategy
-from utils_train import set_logger, init_workspace, load_checkpoints
 
 
 def get_parser(**parser_kwargs):
@@ -42,6 +49,12 @@ if __name__ == "__main__":
     local_rank = int(os.environ.get('LOCAL_RANK'))
     global_rank = int(os.environ.get('RANK'))
     num_rank = int(os.environ.get('WORLD_SIZE'))
+
+    print('MASTER_PORT = ', os.getenv('MASTER_PORT'))
+    print('MASTER_ADDR = ', os.getenv('MASTER_ADDR'))
+    print('WORLD_SIZE = ', os.getenv('WORLD_SIZE'))
+    print('RANK = ', os.getenv('RANK'))
+    print('LOCAL_RANK = ', os.getenv('LOCAL_RANK'))
 
     parser = get_parser()
     ## Extends existing argparse by default Trainer attributes
@@ -135,7 +148,7 @@ if __name__ == "__main__":
 
     def divein(*args, **kwargs):
         if trainer.global_rank == 0:
-            import pudb;
+            import pudb
             pudb.set_trace()
 
     import signal

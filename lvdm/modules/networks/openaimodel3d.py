@@ -1,18 +1,15 @@
-from functools import partial
 from abc import abstractmethod
+from functools import partial
+
 import torch
 import torch.nn as nn
-from einops import rearrange
 import torch.nn.functional as F
-from lvdm.models.utils_diffusion import timestep_embedding
+from einops import rearrange
+
+from lvdm.basics import (avg_pool_nd, conv_nd, linear, normalization,
+                         zero_module)
 from lvdm.common import checkpoint
-from lvdm.basics import (
-    zero_module,
-    conv_nd,
-    linear,
-    avg_pool_nd,
-    normalization
-)
+from lvdm.models.utils_diffusion import timestep_embedding
 from lvdm.modules.attention import SpatialTransformer, TemporalTransformer
 
 
@@ -396,7 +393,8 @@ class UNetModel(nn.Module):
                     context_dim=context_dim,
                     use_checkpoint=use_checkpoint, only_self_att=temporal_selfatt_only, 
                     causal_attention=False, relative_position=use_relative_position, 
-                    temporal_length=temporal_length))
+                    temporal_length=temporal_length)
+            )
 
         input_block_chans = [model_channels]
         ch = model_channels
@@ -553,7 +551,7 @@ class UNetModel(nn.Module):
         ## repeat t times for context [(b t) 77 768] & time embedding
         ## check if we use per-frame image conditioning
         _, l_context, _ = context.shape
-        if l_context == 77 + t*16: ## !!! HARD CODE here
+        if l_context == 77 + t*24: ## !!! HARD CODE here
             context_text, context_img = context[:,:77,:], context[:,77:,:]
             context_text = context_text.repeat_interleave(repeats=t, dim=0)
             context_img = rearrange(context_img, 'b (t l) c -> (b t) l c', t=t)

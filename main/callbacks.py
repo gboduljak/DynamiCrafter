@@ -1,14 +1,15 @@
+import logging
 import os
 import time
-import logging
+
 mainlogger = logging.getLogger('mainlogger')
 
+import pytorch_lightning as pl
 import torch
 import torchvision
-import pytorch_lightning as pl
 from pytorch_lightning.callbacks import Callback
-from pytorch_lightning.utilities import rank_zero_only
-from pytorch_lightning.utilities import rank_zero_info
+from pytorch_lightning.utilities import rank_zero_info, rank_zero_only
+
 from utils.save_video import log_local, prepare_to_log
 
 
@@ -28,7 +29,7 @@ class ImageLogger(Callback):
             os.makedirs(os.path.join(self.save_dir, "train"), exist_ok=True)
             os.makedirs(os.path.join(self.save_dir, "val"), exist_ok=True)
 
-    def log_to_tensorboard(self, pl_module, batch_logs, filename, split, save_fps=8):
+    def log_to_tensorboard(self, pl_module, batch_logs, filename, split, save_fps=12):
         """ log images and videos to tensorboard """        
         global_step = pl_module.global_step
         for key in batch_logs:
@@ -78,10 +79,10 @@ class ImageLogger(Callback):
             if self.to_local:
                 mainlogger.info("Log [%s] batch <%s> to local ..."%(split, filename))
                 filename = "gs{}_".format(pl_module.global_step) + filename
-                log_local(batch_logs, os.path.join(self.save_dir, split), filename, save_fps=10)
+                log_local(batch_logs, os.path.join(self.save_dir, split), filename, save_fps=12)
             else:
                 mainlogger.info("Log [%s] batch <%s> to tensorboard ..."%(split, filename))
-                self.log_to_tensorboard(pl_module, batch_logs, filename, split, save_fps=10)
+                self.log_to_tensorboard(pl_module, batch_logs, filename, split, save_fps=12)
             mainlogger.info('Finish!')
 
             if is_train:

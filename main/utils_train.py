@@ -1,10 +1,16 @@
-import os, re
-from omegaconf import OmegaConf
 import logging
+import os
+import re
+
+from omegaconf import OmegaConf
+
 mainlogger = logging.getLogger('mainlogger')
 
-import torch
 from collections import OrderedDict
+
+import torch
+import torch.nn as nn
+
 
 def init_workspace(name, logdir, model_config, lightning_config, rank=0):
     workdir = os.path.join(logdir, name)
@@ -142,18 +148,26 @@ def load_checkpoints(model, model_cfg):
         mainlogger.info(">>> Load weights from pretrained checkpoint")
 
         pl_sd = torch.load(pretrained_ckpt, map_location="cpu")
-        try:
-            if 'state_dict' in pl_sd.keys():
-                model.load_state_dict(pl_sd["state_dict"], strict=True)
-                mainlogger.info(">>> Loaded weights from pretrained checkpoint: %s"%pretrained_ckpt)
-            else:
-                # deepspeed
-                new_pl_sd = OrderedDict()
-                for key in pl_sd['module'].keys():
-                    new_pl_sd[key[16:]]=pl_sd['module'][key]
-                model.load_state_dict(new_pl_sd, strict=True)
-        except:
-            model.load_state_dict(pl_sd)
+        
+        model_state_dict = pl_sd["state_dict"]
+        
+        img_proj_model_latents = model_state_dict["image_proj_model.latents"]
+
+        if img_proj_model_latents.shape != model.image_proj_model.latents.shape:
+            print(">>> Adapting the state dict for different video length")
+            longer_proj_model_latents = nn.Linear(
+                in_features=128,
+                out_features=1024
+            ).weight.T[None, ...]
+            img_proj_model_latents = torch.cat(
+                [img_proj_model_latents, longer_proj_model_latents],
+                dim=1
+            )
+            model_state_dict["image_proj_model.latents"] = img_proj_model_latents
+ 
+        model.load_state_dict(model_state_dict, strict=True)
+        mainlogger.info(">>> Loaded weights from pretrained checkpoint: %s"%pretrained_ckpt)
+
     else:
         mainlogger.info(">>> Start training from scratch")
 

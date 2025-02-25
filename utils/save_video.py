@@ -1,14 +1,14 @@
 import os
-import numpy as np
-from tqdm import tqdm
-from PIL import Image
-from einops import rearrange
 
+import numpy as np
 import torch
 import torchvision
+from einops import rearrange
+from PIL import Image
 from torch import Tensor
-from torchvision.utils import make_grid
 from torchvision.transforms.functional import to_tensor
+from torchvision.utils import make_grid
+from tqdm import tqdm
 
 
 def frames_to_mp4(frame_dir,output_path,fps):
@@ -59,7 +59,7 @@ def tensor2videogrids(video, root, filename, fps, rescale=True, clamp=True):
     torchvision.io.write_video(path, grid, fps=fps, video_codec='h264', options={'crf': '10'})
 
 
-def log_local(batch_logs, save_dir, filename, save_fps=10, rescale=True):
+def log_local(batch_logs, save_dir, filename, save_fps=12, rescale=True):
     if batch_logs is None:
         return None
     """ save images and videos from images dict """
