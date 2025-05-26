@@ -8,6 +8,7 @@ import torch
 from omegaconf import OmegaConf
 from pytorch_lightning import seed_everything
 from pytorch_lightning.trainer import Trainer
+from torchinfo import summary
 from transformers import logging as transf_logging
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
@@ -80,7 +81,8 @@ if __name__ == "__main__":
     logger.info("***** Configing Model *****")
     config.model.params.logdir = workdir
     model = instantiate_from_config(config.model)
-
+    print(model)
+    print(summary(model))
     ## load checkpoints
     model = load_checkpoints(model, config.model)
 

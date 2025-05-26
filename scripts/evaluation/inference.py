@@ -1,20 +1,28 @@
-import argparse, os, sys, glob
-import datetime, time
-from omegaconf import OmegaConf
-from tqdm import tqdm
-from einops import rearrange, repeat
+import argparse
+import datetime
+import glob
+import os
+import sys
+import time
 from collections import OrderedDict
 
 import torch
 import torchvision
 import torchvision.transforms as transforms
-from pytorch_lightning import seed_everything
+from einops import rearrange, repeat
+from omegaconf import OmegaConf
 from PIL import Image
+from pytorch_lightning import seed_everything
+from torchinfo import summary
+from tqdm import tqdm
+
 sys.path.insert(1, os.path.join(sys.path[0], '..', '..'))
-from lvdm.models.samplers.ddim import DDIMSampler
-from lvdm.models.samplers.ddim_multiplecond import DDIMSampler as DDIMSampler_multicond
-from utils.utils import instantiate_from_config
 import random
+
+from lvdm.models.samplers.ddim import DDIMSampler
+from lvdm.models.samplers.ddim_multiplecond import \
+    DDIMSampler as DDIMSampler_multicond
+from utils.utils import instantiate_from_config
 
 
 def get_filelist(data_dir, postfixes):
@@ -262,6 +270,9 @@ def run_inference(args, gpu_num, gpu_no):
     model.perframe_ae = args.perframe_ae
     assert os.path.exists(args.ckpt_path), "Error: checkpoint Not Found!"
     model = load_model_checkpoint(model, args.ckpt_path)
+    print(
+        summary(model)
+    )
     model.eval()
 
     ## run over data
